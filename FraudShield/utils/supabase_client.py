@@ -20,6 +20,12 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     except Exception:
         pass
 
+# Strip accidental spaces (very common issue)
+if SUPABASE_URL:
+    SUPABASE_URL = str(SUPABASE_URL).strip()
+if SUPABASE_KEY:
+    SUPABASE_KEY = str(SUPABASE_KEY).strip()
+
 # Optional debug (remove later)
 print("DEBUG SUPABASE_URL:", SUPABASE_URL)
 print("DEBUG SUPABASE_KEY exists:", bool(SUPABASE_KEY))
