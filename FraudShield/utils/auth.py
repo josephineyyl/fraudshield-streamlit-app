@@ -131,25 +131,26 @@ def _google_flow():
     return flow
 
 
-def google_auth_link(label: str, mode: str):
-    """
-    mode: 'login' or 'register'
-    Redirects in the SAME tab to avoid Streamlit session reset.
-    """
-    flow = _google_flow()
-    auth_url, _ = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        state=mode,
-        prompt="select_account",  # optional; helps when multiple accounts
+def google_auth_link(label: str, mode: str = "login"):
+    auth_url = get_google_auth_url(mode=mode)
+    
+    # Use a real <a> link. Browsers won't block this.
+    st.markdown(
+        f"""
+        <a href="{auth_url}" target="_self" style="
+            text-decoration: none;
+            color: white;
+            background-color: #4285F4;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+        ">{label}</a>
+        """,
+        unsafe_allow_html=True
     )
-
-    if st.button(label, use_container_width=True):
-        st.markdown(
-            f"<meta http-equiv='refresh' content='0; url={auth_url}'>",
-            unsafe_allow_html=True,
-        )
-        st.stop()
 
 def handle_google_callback():
     qp = dict(st.query_params)
