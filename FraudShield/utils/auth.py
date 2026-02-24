@@ -247,20 +247,23 @@ def google_login_or_register():
         provider="google",
     )
 
-    import json
     from pathlib import Path
+    import json
+    import os
 
-    Path(".local_session.json").write_text(
-        json.dumps(
-            {
-                "access_token": res.session.access_token,
-                "refresh_token": res.session.refresh_token,
-                "email": res.user.email,
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
+    # Only write local debug session file when running locally
+    if not os.getenv("STREAMLIT_SERVER_HEADLESS"):  # usually set on cloud/server runs
+        Path(".local_session.json").write_text(
+            json.dumps(
+                {
+                    "access_token": res.session.access_token,
+                    "refresh_token": res.session.refresh_token,
+                    "email": res.user.email,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
 
     # Ensure profile exists (don’t block login if it fails)
     try:
