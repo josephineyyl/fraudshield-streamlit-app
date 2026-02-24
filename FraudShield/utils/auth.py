@@ -131,26 +131,55 @@ def _google_flow():
     return flow
 
 
-def google_auth_link(label: str, mode: str = "login"):
-    auth_url = get_google_auth_url(mode=mode)
+# 1. First, define the URL generator
+def get_google_auth_url(mode: str = "login"):
+    client_config = _load_google_client()
     
-    # Use a real <a> link. Browsers won't block this.
-    st.markdown(
-        f"""
-        <a href="{auth_url}" target="_self" style="
-            text-decoration: none;
-            color: white;
-            background-color: #4285F4;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-        ">{label}</a>
-        """,
-        unsafe_allow_html=True
+    # Ensure this matches your Google Console exactly
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+    if not redirect_uri:
+        try:
+            redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
+        except:
+            redirect_uri = "https://fraudshield-app.streamlit.app" # Hardcode fallback
+
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        {"web": client_config},
+        scopes=GOOGLE_SCOPES,
+        redirect_uri=redirect_uri.strip()
     )
+    
+    # We remove 'state' temporarily to ensure no mismatch 403s
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true"
+    )
+    return authorization_url
+
+# 2. Then, define the link generator
+def google_auth_link(label: str, mode: str = "login"):
+    try:
+        auth_url = get_google_auth_url(mode=mode)
+        
+        # USE A REAL LINK BUTTON (Avoids the 'Meta Refresh' 403/Block issue)
+        st.markdown(
+            f"""
+            <a href="{auth_url}" target="_self" style="
+                text-decoration: none;
+                color: white;
+                background-color: #4285F4;
+                padding: 10px 20px;
+                border-radius: 5px;
+                display: block;
+                text-align: center;
+                font-weight: bold;
+                margin: 10px 0;
+            ">{label}</a>
+            """,
+            unsafe_allow_html=True
+        )
+    except Exception as e:
+        st.error(f"Failed to generate Google Login link: {e}")
 
 def handle_google_callback():
     qp = dict(st.query_params)
