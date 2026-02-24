@@ -113,14 +113,15 @@ def _google_flow():
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
     if not redirect_uri:
         try:
-               redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
+            redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
         except Exception:
             redirect_uri = "http://localhost:8502"
 
     redirect_uri = redirect_uri.strip()
 
-    # Safety: remove accidental spaces from secrets
-    redirect_uri = redirect_uri.strip()
+    # DEBUG (temporary)
+    st.write("DEBUG oauth client_id:", cfg.get("client_id"))
+    st.write("DEBUG redirect_uri:", redirect_uri)
 
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         {"web": cfg},
