@@ -156,30 +156,17 @@ def get_google_auth_url(mode: str = "login"):
     )
     return authorization_url
 
-# 2. Then, define the link generator
-def google_auth_link(label: str, mode: str = "login"):
-    try:
-        auth_url = get_google_auth_url(mode=mode)
-        
-        # USE A REAL LINK BUTTON (Avoids the 'Meta Refresh' 403/Block issue)
-        st.markdown(
-            f"""
-            <a href="{auth_url}" target="_self" style="
-                text-decoration: none;
-                color: white;
-                background-color: #4285F4;
-                padding: 10px 20px;
-                border-radius: 5px;
-                display: block;
-                text-align: center;
-                font-weight: bold;
-                margin: 10px 0;
-            ">{label}</a>
-            """,
-            unsafe_allow_html=True
-        )
-    except Exception as e:
-        st.error(f"Failed to generate Google Login link: {e}")
+def google_auth_link(label: str, mode: str):
+    flow = _google_flow()
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        state=mode,
+        prompt="select_account",
+    )
+    st.write("DEBUG auth_url:", auth_url)  # <-- add this line
+
+    st.link_button(label, auth_url, use_container_width=True)
 
 def handle_google_callback():
     qp = dict(st.query_params)
