@@ -17,6 +17,11 @@ def init_session_state():
 def restore_session_from_cookie():
     token_key = os.getenv("TOKEN_KEY")
     if not token_key:
+        try:
+            token_key = st.secrets.get("TOKEN_KEY")
+        except Exception:
+            token_key = None
+    if not token_key:
         return False
 
     def _apply_session(access_token: str, refresh_token: str) -> bool:
@@ -41,15 +46,15 @@ def restore_session_from_cookie():
         pass
 
     # 2) DEV fallback: restore from local file (your auth.py writes this)
-    try:
-        p = Path(".local_session.json")
-        if p.exists():
-            data2 = json.loads(p.read_text(encoding="utf-8"))
-            if _apply_session(data2.get("access_token"), data2.get("refresh_token")):
-                # st.write("DEBUG restored from .local_session.json")
-                return True
-    except Exception:
-        pass
+    if not os.getenv("STREAMLIT_SERVER_HEADLESS"):
+        try:
+            p = Path(".local_session.json")
+            if p.exists():
+                data2 = json.loads(p.read_text(encoding="utf-8"))
+                if _apply_session(data2.get("access_token"), data2.get("refresh_token")):
+                    return True
+        except Exception:
+            pass
 
     return False
 
