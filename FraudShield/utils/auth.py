@@ -111,13 +111,13 @@ def _google_flow():
     cfg = _load_google_client()
 
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
-	if not redirect_uri:
-    	try:
-       		redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
-    	except Exception:
-        	redirect_uri = "http://localhost:8502"
+    if not redirect_uri:
+        try:
+               redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
+        except Exception:
+            redirect_uri = "http://localhost:8502"
 
-	redirect_uri = redirect_uri.strip()
+    redirect_uri = redirect_uri.strip()
 
     # Safety: remove accidental spaces from secrets
     redirect_uri = redirect_uri.strip()
@@ -166,13 +166,13 @@ def handle_google_callback():
     client_secret = cfg["client_secret"]
 
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
-	if not redirect_uri:
-    	try:
-       		redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
-    	except Exception:
-        	redirect_uri = "http://localhost:8502"
+    if not redirect_uri:
+        try:
+               redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
+        except Exception:
+            redirect_uri = "http://localhost:8502"
 
-	redirect_uri = redirect_uri.strip()
+    redirect_uri = redirect_uri.strip()
 
     token_res = requests.post(
         "https://oauth2.googleapis.com/token",
