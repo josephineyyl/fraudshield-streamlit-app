@@ -19,14 +19,35 @@ GOOGLE_SCOPES = [
 ]
 
 def _load_google_client():
+    # Try Streamlit secrets first (best for cloud)
+    try:
+        secret_json = st.secrets.get("GOOGLE_CLIENT_SECRET_JSON")
+        if secret_json:
+            return json.loads(secret_json)["web"]
+    except Exception:
+        pass
+
+    # Fallback to local file (best for local dev)
     with open("client_secret.json", "r", encoding="utf-8") as f:
         return json.load(f)["web"]
+        
 
 def _token_mgr() -> AuthTokenManager:
     token_key = os.getenv("TOKEN_KEY")
     if not token_key:
-        raise RuntimeError("Missing TOKEN_KEY in .env")
-    return AuthTokenManager(cookie_name="fraudshield_auth", token_key=token_key, token_duration_days=7)
+        try:
+            token_key = st.secrets.get("TOKEN_KEY")
+        except Exception:
+            token_key = None
+
+    if not token_key:
+        raise RuntimeError("Missing TOKEN_KEY (env/secrets)")
+
+    return AuthTokenManager(
+        cookie_name="fraudshield_auth",
+        token_key=token_key,
+        token_duration_days=7
+    )
 
 
 def profile_exists(email: str) -> bool:
@@ -132,7 +153,13 @@ def handle_google_callback():
     cfg = _load_google_client()
     client_id = cfg["client_id"]
     client_secret = cfg["client_secret"]
-    redirect_uri = "http://localhost:8502"
+
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+    if not redirect_uri:
+        try:
+            redirect_uri = st.secrets.get("GOOGLE_REDIRECT_URI")
+        except Exception:
+            redirect_uri = "http://localhost:8502"
 
     token_res = requests.post(
         "https://oauth2.googleapis.com/token",
@@ -162,7 +189,8 @@ def handle_google_callback():
     st.query_params.clear()
 
     return {"mode": mode, "email": email, "id_token": idt}
-
+    
+    
 def google_login_or_register():
     try:
         payload = handle_google_callback()
